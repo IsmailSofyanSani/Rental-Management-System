@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Control Panel - RMS Debugging Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background: #0a0a0a;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(239, 68, 68, 0.15) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0, transparent 50%);
+            min-height: 100vh;
+            color: #fff;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated Grid Background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        
+        /* Glass morphism */
+        .glass {
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-light {
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        /* Toggle Switch - Modern */
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .toggle-switch.active::after {
+            left: 27px;
+        }
+        
+        /* Status Indicator */
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+        
+        /* Bug Option Card */
+        .bug-option {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bug-option::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .bug-option:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .bug-option:hover::before {
+            opacity: 1;
+        }
+        
+        .bug-option.active {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.5);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+        }
+        
+        .bug-option.active .bug-icon {
+            transform: scale(1.1);
+        }
+        
+        /* Icon Animation */
+        .bug-icon {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Button Styles */
+        .btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+        
+        .btn:hover::before {
+            transform: translateX(100%);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Active Bug Pill */
+        .active-bug-pill {
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Notification */
+        .notification {
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Glow Effects */
+        .glow-red {
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+        }
+        
+        .glow-green {
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+        }
+        
+        /* Code Block */
+        code {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Hover Effects */
+        .bug-option:hover .bug-icon {
+            animation: wiggle 0.5s ease-in-out;
+        }
+        
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+        
+        /* Loading Animation for Icons */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Pulse Animation for Active State */
+        .bug-option.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 1rem;
+            animation: borderPulse 2s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes borderPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+            }
+        }
+        
+        /* Smooth transitions for all interactive elements */
+        button, a, .toggle-switch, .bug-option {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+
+    </style>
+</head>
+<body class="p-6 lg:p-10">
+
+    <!-- Header dengan glass morphism -->
+    <div class="max-w-7xl mx-auto mb-10">
+        <div class="glass rounded-3xl p-8 shadow-2xl">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div class="flex items-center gap-5">
+                    <div class="w-20 h-20 bg-gradient-to-br from-red-500 via-pink-500 to-rose-600 rounded-2xl flex items-center justify-center shadow-xl glow-red">
+                        <i class="fas fa-bug text-white text-3xl bug-icon"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-black gradient-text mb-2">Developer Control Panel</h1>
+                        <p class="text-sm text-gray-400 font-medium">RMS System Debugging & Testing Tool</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="?" class="btn px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to App
+                    </a>
+                    <div class="glass-light px-4 py-3 rounded-xl flex items-center gap-3">
+                        <div class="status-indicator bg-green-500 glow-green"></div>
+                        <span class="text-sm font-bold text-white" id="connection-status">Connected</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- URL Info dengan modern styling -->
+            <div class="mt-6 glass-light p-4 rounded-xl border border-blue-500/30">
+                <p class="text-xs text-blue-300 font-semibold flex items-center gap-2">
+                    <i class="fas fa-link"></i>
+                    <strong class="text-white">Access URL:</strong> 
+                    <code class="text-blue-400 flex-1 truncate" id="access-url">Loading...</code>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Display current URL
+        document.getElementById('access-url').textContent = window.location.href;
+    </script>
+
+    <!-- Main Content dengan modern grid -->
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left Panel - Bug Controls -->
+        <div class="lg:col-span-2 space-y-8">
+            
+            <!-- Master Control dengan highlight -->
+            <div class="glass rounded-3xl p-8 shadow-2xl border-2 border-red-500/20">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-black text-white mb-2 flex items-center gap-3">
+                            <span class="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-power-off text-red-500"></i>
+                            </span>
+                            Master Bug Switch
+                        </h2>
+                        <p class="text-sm text-gray-400 ml-13">Enable/Disable REAL bug injection globally</p>
+                    </div>
+                    <div class="toggle-switch scale-125" id="master-toggle" onclick="toggleMaster()"></div>
+                </div>
+                <div class="glass-light border-l-4 border-red-500 p-5 rounded-xl">
+                    <p class="text-sm text-red-300 font-bold flex items-center gap-3 mb-2">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                        <span>⚠️ REAL BUG INJECTION - Sistem akan BENAR-BENAR rusak!</span>
+                    </p>
+                    <p class="text-xs text-gray-400 ml-9">
+                        Bukan simulasi testing. Bug yang dipilih akan membuat aplikasi error secara nyata. 
+                        Toggle OFF untuk restore normal.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Bug Options dengan modern card design -->
+            <div class="glass rounded-3xl p-8 shadow-2xl">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-black text-white flex items-center gap-3">
+                        <span class="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-bug text-purple-500"></i>
+                        </span>
+                        Real Bug Scenarios
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-red-400 font-bold px-3 py-1 bg-red-500/20 rounded-full border border-red-500/30">
+                            PRODUCTION READY
+                        </span>
+                        <span class="text-xs text-purple-400 font-bold px-3 py-1 bg-purple-500/20 rounded-full border border-purple-500/30">
+                            16 BUGS
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Frontend Crash -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('frontend-crash')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-desktop text-red-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Frontend Crash 💥</p>
+                                    <p class="text-xs text-gray-400 mt-1">Crash aplikasi 3 detik setelah load - REAL error!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-frontend-crash"></div>
+                        </div>
+                    </div>
+
+                    <!-- Null Data -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('null-data')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-database text-orange-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Null Data Response 📊</p>
+                                    <p class="text-xs text-gray-400 mt-1">Semua data return NULL - tabel kosong total!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-null-data"></div>
+                        </div>
+                    </div>
+
+                    <!-- Slow Response -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('slow-response')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-clock text-yellow-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Slow API Response ⏱️</p>
+                                    <p class="text-xs text-gray-400 mt-1">REAL 10 detik delay - loading sangat lama!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-slow-response"></div>
+                        </div>
+                    </div>
+
+                    <!-- Permission Error -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('permission-error')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-lock text-purple-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Permission Denied 🔒</p>
+                                    <p class="text-xs text-gray-400 mt-1">Tampilkan 403 Forbidden - akses ditolak!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-permission-error"></div>
+                        </div>
+                    </div>
+
+                    <!-- Network Error -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('network-error')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-wifi text-blue-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Network Offline 📡</p>
+                                    <p class="text-xs text-gray-400 mt-1">Semua request GAGAL - simulate offline mode!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-network-error"></div>
+                        </div>
+                    </div>
+
+                    <!-- Infinite Loop -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('infinite-loop')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-pink-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-spinner text-pink-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Infinite Loading ♾️</p>
+                                    <p class="text-xs text-gray-400 mt-1">Loading PERMANEN - tidak pernah selesai!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-infinite-loop"></div>
+                        </div>
+                    </div>
+
+                    <!-- Corrupted Data -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('corrupt-data')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-red-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-exclamation-circle text-red-600 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Corrupted Data 🔴</p>
+                                    <p class="text-xs text-gray-400 mt-1">Data RUSAK format salah - error parsing!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-corrupt-data"></div>
+                        </div>
+                    </div>
+
+                    <!-- Random Errors -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('random-error')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-dice text-indigo-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Random Errors 🎲</p>
+                                    <p class="text-xs text-gray-400 mt-1">Error RANDOM setiap 5 detik - 50% chance!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-random-error"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Memory Leak -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('memory-leak')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-memory text-cyan-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Memory Leak 💾</p>
+                                    <p class="text-xs text-gray-400 mt-1">Consume memory terus-menerus - RAM penuh!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-memory-leak"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- UI Freeze -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('ui-freeze')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-slate-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-snowflake text-slate-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">UI Freeze ❄️</p>
+                                    <p class="text-xs text-gray-400 mt-1">Freeze UI 5 detik - tidak bisa klik apapun!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-ui-freeze"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Double Data -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('double-data')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-teal-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-clone text-teal-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Double Data 👥</p>
+                                    <p class="text-xs text-gray-400 mt-1">Semua data DUPLIKAT - muncul 2 kali!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-double-data"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Wrong Calculation -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('wrong-calc')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-calculator text-amber-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Wrong Calculation 🧮</p>
+                                    <p class="text-xs text-gray-400 mt-1">Perhitungan SALAH - angka tidak akurat!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-wrong-calc"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- CSS Chaos -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('css-chaos')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-fuchsia-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-palette text-fuchsia-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">CSS Chaos 🎨</p>
+                                    <p class="text-xs text-gray-400 mt-1">Tampilan RUSAK - rotate & color random!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-css-chaos"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Flash Content -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('flash-content')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-lime-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-bolt text-lime-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Flash Content ⚡</p>
+                                    <p class="text-xs text-gray-400 mt-1">Screen BERKEDIP terus-menerus - seizure warning!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-flash-content"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Keyboard Hijack -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('keyboard-hijack')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-keyboard text-emerald-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Keyboard Hijack ⌨️</p>
+                                    <p class="text-xs text-gray-400 mt-1">Keyboard RUSAK - ketik jadi random!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-keyboard-hijack"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Infinite Alerts -->
+                    <div class="bug-option glass-light p-5 rounded-2xl border border-white/10 cursor-pointer" onclick="toggleBug('infinite-alerts')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-rose-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-bell text-rose-500 text-xl bug-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-lg">Infinite Alerts 🔔</p>
+                                    <p class="text-xs text-gray-400 mt-1">Alert SPAM terus-menerus - sangat mengganggu!</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch" id="toggle-infinite-alerts"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Status & Actions -->
+        <div class="space-y-8">
+            
+            <!-- Active Bugs Monitor -->
+            <div class="glass rounded-3xl p-7 shadow-2xl">
+                <h2 class="text-xl font-black text-white mb-5 flex items-center gap-3">
+                    <span class="w-9 h-9 bg-red-500/20 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-list-check text-red-500"></i>
+                    </span>
+                    Active Bugs
+                </h2>
+                <div id="active-bugs-list" class="space-y-3">
+                    <p class="text-sm text-gray-500 italic text-center py-8">No active bugs</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions dengan gradient buttons -->
+            <div class="glass rounded-3xl p-7 shadow-2xl">
+                <h2 class="text-xl font-black text-white mb-5 flex items-center gap-3">
+                    <span class="w-9 h-9 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-bolt text-blue-500"></i>
+                    </span>
+                    Quick Actions
+                </h2>
+                <div class="space-y-4">
+                    <button onclick="resetAll()" class="btn w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all">
+                        <i class="fas fa-redo mr-2"></i>Reset All
+                    </button>
+                    <button onclick="applyPreset('critical')" class="btn w-full bg-gradient-to-r from-red-600 to-rose-700 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all">
+                        <i class="fas fa-fire mr-2"></i>Critical Test
+                    </button>
+                    <button onclick="exportConfig()" class="btn w-full bg-gradient-to-r from-gray-700 to-gray-800 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-2xl transition-all">
+                        <i class="fas fa-download mr-2"></i>Export Config
+                    </button>
+                </div>
+            </div>
+
+            <!-- System Info dengan modern stats -->
+            <div class="glass rounded-3xl p-7 shadow-2xl">
+                <h2 class="text-sm font-bold text-gray-400 mb-5 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-info-circle"></i>
+                    System Info
+                </h2>
+                <div class="space-y-4">
+                    <div class="glass-light p-4 rounded-xl">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-400">Version:</span>
+                            <span class="font-bold text-white text-sm">v2.0.0</span>
+                        </div>
+                    </div>
+                    <div class="glass-light p-4 rounded-xl">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-400">Environment:</span>
+                            <span class="font-bold text-emerald-400 text-sm">Development</span>
+                        </div>
+                    </div>
+                    <div class="glass-light p-4 rounded-xl">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-400">Active Bugs:</span>
+                            <span class="font-black text-red-500 text-xl" id="bug-count">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let bugState = {
+            masterEnabled: false,
+            activeBugs: new Set()
+        };
+
+        // Load saved state
+        function loadState() {
+            const saved = localStorage.getItem('dev-control-state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                bugState.masterEnabled = parsed.masterEnabled || false;
+                bugState.activeBugs = new Set(parsed.activeBugs || []);
+                updateUI();
+            }
+        }
+
+        // Save state
+        function saveState() {
+            // Save UI state
+            const stateToSave = {
+                masterEnabled: bugState.masterEnabled,
+                activeBugs: Array.from(bugState.activeBugs)
+            };
+            
+            localStorage.setItem('dev-control-state', JSON.stringify(stateToSave));
+            
+            // IMPORTANT: Sync to main app immediately!
+            localStorage.setItem('rms-debug-state', JSON.stringify({
+                enabled: bugState.masterEnabled,
+                bugs: Array.from(bugState.activeBugs)
+            }));
+            
+            // Convert back to Set for UI
+            bugState.activeBugs = new Set(stateToSave.activeBugs);
+        }
+
+        // Toggle master switch
+        function toggleMaster() {
+            bugState.masterEnabled = !bugState.masterEnabled;
+            
+            // Clear all bugs when turning off
+            if (!bugState.masterEnabled) {
+                bugState.activeBugs.clear();
+            }
+            
+            updateUI();
+            saveState();
+            
+            if (bugState.masterEnabled) {
+                showNotification('🔴 REAL BUG MODE ACTIVE', 'Sistem siap untuk bug injection!', 'error');
+            } else {
+                showNotification('✅ Bug Mode OFF', 'Sistem kembali normal - reload app untuk apply', 'success');
+            }
+        }
+
+        // Toggle individual bug
+        function toggleBug(bugId) {
+            if (!bugState.masterEnabled) {
+                showNotification('⚠️ Master Switch OFF', 'Aktifkan Master Switch terlebih dahulu!', 'warning');
+                return;
+            }
+
+            if (bugState.activeBugs.has(bugId)) {
+                bugState.activeBugs.delete(bugId);
+                showNotification('✅ Bug Disabled', getBugName(bugId) + ' - Reload app untuk restore', 'success');
+            } else {
+                bugState.activeBugs.add(bugId);
+                showNotification('� Bug ACTIVE!', getBugName(bugId) + ' - App akan ERROR!', 'error');
+            }
+            
+            updateUI();
+            saveState();
+        }
+
+        // Update UI
+        function updateUI() {
+            // Master toggle
+            const masterToggle = document.getElementById('master-toggle');
+            if (bugState.masterEnabled) {
+                masterToggle.classList.add('active');
+            } else {
+                masterToggle.classList.remove('active');
+            }
+
+            // Individual toggles
+            bugState.activeBugs.forEach(bugId => {
+                const toggle = document.getElementById('toggle-' + bugId);
+                const option = toggle?.closest('.bug-option');
+                if (toggle) {
+                    toggle.classList.add('active');
+                    option?.classList.add('active');
+                }
+            });
+
+            // Remove inactive
+            document.querySelectorAll('.bug-option').forEach(opt => {
+                const toggle = opt.querySelector('.toggle-switch');
+                const bugId = toggle.id.replace('toggle-', '');
+                if (!bugState.activeBugs.has(bugId)) {
+                    toggle.classList.remove('active');
+                    opt.classList.remove('active');
+                }
+            });
+
+            // Active bugs list
+            updateActiveBugsList();
+            
+            // Bug count
+            document.getElementById('bug-count').textContent = bugState.activeBugs.size;
+        }
+
+        // Update active bugs list dengan modern design
+        function updateActiveBugsList() {
+            const list = document.getElementById('active-bugs-list');
+            if (bugState.activeBugs.size === 0) {
+                list.innerHTML = '<p class="text-sm text-gray-500 italic text-center py-8">No active bugs</p>';
+                return;
+            }
+
+            list.innerHTML = Array.from(bugState.activeBugs).map(bugId => `
+                <div class="active-bug-pill glass-light p-4 rounded-xl border border-red-500/30">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                            <span class="text-sm font-bold text-white">${getBugName(bugId)}</span>
+                        </div>
+                        <i class="fas fa-check-circle text-red-500"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get bug name
+        function getBugName(bugId) {
+            const names = {
+                'frontend-crash': 'Frontend Crash',
+                'null-data': 'Null Data',
+                'slow-response': 'Slow Response',
+                'permission-error': 'Permission Error',
+                'network-error': 'Network Error',
+                'infinite-loop': 'Infinite Loop',
+                'corrupt-data': 'Corrupted Data',
+                'random-error': 'Random Errors',
+                'memory-leak': 'Memory Leak',
+                'ui-freeze': 'UI Freeze',
+                'double-data': 'Double Data',
+                'wrong-calc': 'Wrong Calculation',
+                'css-chaos': 'CSS Chaos',
+                'flash-content': 'Flash Content',
+                'keyboard-hijack': 'Keyboard Hijack',
+                'infinite-alerts': 'Infinite Alerts'
+            };
+            return names[bugId] || bugId;
+        }
+
+        // Reset all
+        function resetAll() {
+            bugState.masterEnabled = false;
+            bugState.activeBugs.clear();
+            updateUI();
+            saveState();
+            showNotification('🔄 Complete Reset', 'Semua bug direset - Reload app untuk restore normal', 'success');
+        }
+
+        // Apply preset
+        function applyPreset(preset) {
+            if (preset === 'critical') {
+                bugState.masterEnabled = true;
+                bugState.activeBugs = new Set([
+                    'frontend-crash', 
+                    'null-data', 
+                    'network-error',
+                    'memory-leak',
+                    'css-chaos'
+                ]);
+                updateUI();
+                saveState();
+                showNotification('💥 CRITICAL MODE!', '5 bug AKTIF - App akan TOTAL CRASH!', 'error');
+            }
+        }
+
+        // Export config
+        function exportConfig() {
+            const config = {
+                timestamp: new Date().toISOString(),
+                masterEnabled: bugState.masterEnabled,
+                activeBugs: Array.from(bugState.activeBugs)
+            };
+            
+            const blob = new Blob([JSON.stringify(config, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dev-control-${Date.now()}.json`;
+            a.click();
+            
+            showNotification('📥 Export Success', 'Config downloaded', 'success');
+        }
+
+        // Modern notification system
+        function showNotification(title, message, type) {
+            const colors = {
+                success: 'from-emerald-500 to-green-600',
+                error: 'from-red-500 to-rose-600',
+                warning: 'from-yellow-500 to-orange-600'
+            };
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle'
+            };
+
+            const notif = document.createElement('div');
+            notif.className = `notification fixed top-6 right-6 glass bg-gradient-to-r ${colors[type]} text-white px-6 py-5 rounded-2xl shadow-2xl z-50 min-w-[320px]`;
+            notif.innerHTML = `
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i class="fas ${icons[type]} text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-black text-base mb-1">${title}</p>
+                        <p class="text-sm opacity-90">${message}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-white/70 hover:text-white transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.style.animation = 'slideOutRight 0.4s ease-out forwards';
+                setTimeout(() => notif.remove(), 400);
+            }, 4000);
+        }
+
+        // Initialize
+        loadState();
+        updateUI();
+
+        // Sync with main app
+        setInterval(() => {
+            // Broadcast state to main app via localStorage
+            localStorage.setItem('rms-debug-state', JSON.stringify({
+                enabled: bugState.masterEnabled,
+                bugs: Array.from(bugState.activeBugs)
+            }));
+        }, 1000);
+    </script>
+
+    <style>
+        @keyframes slide-in {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slide-out {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .animate-slide-in {
+            animation: slide-in 0.3s ease-out;
+        }
+    </style>
+
+</body>
+</html>
